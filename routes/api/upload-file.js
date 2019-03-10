@@ -1,5 +1,5 @@
 const aws = require('aws-sdk')
-const logger = require('../logger')
+const logger = require('../../logger')
 
 const s3 = new aws.S3({
   secretAccessKey: process.env.Secret_Access_Key,
