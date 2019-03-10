@@ -2,15 +2,19 @@ require('dotenv').config();
 
 const express = require('express');
 const mongoose = require('mongoose');
+const config = require('config')
 
-const app = express()
+const db = config.get('mongoURI');
 
-app.use(express.json())
+const app = express();
+
+app.use(express.json());
 
 // Connect to Mongo
 mongoose
-  .connect('mongodb+srv://npt:npt123456@cluster0-cehiu.mongodb.net/wep-database?retryWrites=true', { 
-    useNewUrlParser: true
+  .connect(db, { 
+    useNewUrlParser: true,
+    useCreateIndex: true
   }) // Adding new mongo url parser
   .then(() => console.log('MongoDB Connected...'))
   .catch(err => console.log(err));
@@ -18,11 +22,13 @@ mongoose
   
   // Routes
 app.use('/api/posts', require('./routes/api/posts'));
+app.use('/api/auth', require('./routes/api/auth'));
 require('./routes/api/upload-file')(app);
 
 
 // Start server
-const port = 5000 || process.env.PORT
+const port = process.env.PORT || 5000;
+
 app.listen(port, () => {
     console.log(`App listening on port ${port}`)
-})
+});
