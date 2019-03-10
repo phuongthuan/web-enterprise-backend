@@ -13,6 +13,10 @@
     "body-parser": "^1.18.3",
     "dotenv": "^6.2.0",
     "express": "^4.16.4",
-    "signale": "^1.4.0"
+    "jsonwebtoken": "^8.5.0",
+    "lodash": "^4.17.11",
+    "mongoose": "^5.4.18",
+    "signale": "^1.4.0",
+    "uuid": "^3.3.2"
   }
 }
