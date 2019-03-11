@@ -31,10 +31,18 @@ const upload = multer({
   })
 }); 
 
-module.exports = app => {
-  app.post('/api/upload-file', upload.single('image'), (req, res, next) => {
-    logger.debug('request: ', req.file)
+const singleUpload = upload.single('file');
 
-    return res.status(200).json({ fileUrl: req.file.location });
-  })
+module.exports = app => {
+  app.post('/api/upload-file', (req, res) => {
+    logger.debug('request: ', req.file)
+    singleUpload(req, res, (err) => {
+      if (err) {
+        return res.status(422).send({errors: [{title: 'Image Upload Error', detail: err.message}] });
+      } 
+
+      return res.status(200).json({ fileUrl: req.file.location });
+
+    });
+  });
 }
