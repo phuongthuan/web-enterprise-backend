@@ -27,9 +27,9 @@ const UserSchema = new Schema({
     type: String,
     unique: true
   },
-  role: {
-    type: Number,
-    default: 0
+  roles: {
+    type: [String],
+    default: ["student"]
   }
 });
 
