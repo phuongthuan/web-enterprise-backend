@@ -1,4 +1,3 @@
 {
-  "mongoURI": "mongodb+srv://npt:npt123456@cluster0-cehiu.mongodb.net/wep-database?retryWrites=true",
-  "jwtSecret": "secret_web_enterprise"
+  "mongodbURI": "your mongo DB URI"
 }

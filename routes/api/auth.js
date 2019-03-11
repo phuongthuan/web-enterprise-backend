@@ -24,9 +24,7 @@ router.post('/', async (req, res) => {
     if(!user) return res.status(400).json({ msg: 'User Does not exist' });
 
   } catch (error) {
-
     console.log(error)
-    
   }
 });
 
