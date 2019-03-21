@@ -22,9 +22,9 @@ mongoose
 
   
   // Routes
-app.use('/api/posts', require('./routes/api/posts'));
-app.use('/api/users', require('./routes/api/users'));
-app.use('/api/auth', require('./routes/api/auth'));
+require('./routes/api/auth')(app);
+require('./routes/api/posts')(app);
+require('./routes/api/users')(app);
 require('./routes/api/upload-file')(app);
 
 

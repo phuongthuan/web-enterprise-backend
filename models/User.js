@@ -30,7 +30,11 @@ const UserSchema = new Schema({
   roles: {
     type: [String],
     default: ["student"]
-  }
+  },
+  isPublished: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 module.exports = User = mongoose.model('users', UserSchema);

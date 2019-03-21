@@ -1,61 +1,61 @@
-const express = require('express');
-const router = express.Router();
 const logger = require('../../logger')
 const auth = require('../../middlewares/auth');
 
 const Post = require('../../models/Post');
 
-// @route   GET api/posts
-// @desc    Get All Posts
-// @access  Public
-router.get('/', async (req, res) => {
-  const posts = await Post.find({});
-  return res.json(posts);
-});
 
-// @route   GET api/posts/:id
-// @desc    Get A Post
-// @access  Public
-router.get('/:id', async (req, res) => {
-  const { id } = req.params;
-  logger.debug('request: ', req.params)
-  try {
-    const post = await Post.findById(id);
-    return res.json(post);
-  } catch (error) {
-    return res.status(400).json({ msg: 'Post Does not exist' });
-  }
-});
+module.exports = app => {
+  // @route   GET api/posts
+  // @desc    Get All Posts
+  // @access  Public
+  app.get('/api/posts', async (req, res) => {
+    logger.debug('GET api/posts')
+    const posts = await Post.find({});
+    return res.json(posts);
+  });
 
-// @route   POST api/posts
-// @desc    Create A Post
-// @access  Private
-router.post('/', auth, async (req, res) => {
-  logger.debug('request: ', req.user.id);
+  // @route   GET api/posts/:id
+  // @desc    Get A Post
+  // @access  Public
+  app.get('/api/posts/:id', async (req, res) => {
+    const { id } = req.params;
+    logger.debug('GET api/posts/:id ', req.params)
+    try {
+      const post = await Post.findById(id);
+      return res.json(post);
+    } catch (error) {
+      return res.status(400).json({ msg: 'Post Does not exist' });
+    }
+  });
 
-  const { title, content, description, fileUrl } = req.body;
+  // @route   POST api/posts
+  // @desc    Create A Post
+  // @access  Private
+  app.post('/api/posts', auth, async (req, res) => {
+    logger.debug('request: ', req.user.id);
 
-  if (!content || !title) return res.status(400).json({ message: "Please enter all the required fields!"});
+    const { title, content, description, fileUrl } = req.body;
 
-  const newPost = await new Post({
-    _user: req.user.id,
-    title,
-    description,
-    content,
-    fileUrl
-  }).save();
+    if (!content || !title) return res.status(400).json({ message: "Please enter all the required fields!"});
 
-  return res.json(newPost);
-});
+    const newPost = await new Post({
+      _user: req.user.id,
+      title,
+      description,
+      content,
+      fileUrl
+    }).save();
 
-// @route   DELETE api/posts/:id
-// @desc    Delete A Post
-// @access  Private
-router.delete('/:id', auth, (req, res) => {
-  Post.findById(req.params.id)
-    .then(post => post.remove().then(() => res.json({ success: true })))
-    .catch(err => res.status(404).json({ success: false }));
-});
+    return res.json(newPost);
+  });
 
-module.exports = router;
+  // @route   DELETE api/posts/:id
+  // @desc    Delete A Post
+  // @access  Private
+  app.delete('/api/posts/:id', auth, (req, res) => {
+    Post.findById(req.params.id)
+      .then(post => post.remove().then(() => res.json({ success: true })))
+      .catch(err => res.status(404).json({ success: false }));
+  });
+};
 
