@@ -7,6 +7,10 @@ const PostSchema = new Schema({
     content: { type: String, required: true },
     description: String,
     fileUrl: { type: String },
+    isPublished: {
+        type: Boolean,
+        default: false,
+    },
     posted_date: { type: Date, default: Date.now }
 });
 

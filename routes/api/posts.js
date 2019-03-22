@@ -3,7 +3,6 @@ const auth = require('../../middlewares/auth');
 
 const Post = require('../../models/Post');
 
-
 module.exports = app => {
   // @route   GET api/posts
   // @desc    Get All Posts
@@ -32,7 +31,7 @@ module.exports = app => {
   // @desc    Create A Post
   // @access  Private
   app.post('/api/posts', auth, async (req, res) => {
-    logger.debug('request: ', req.user.id);
+    logger.debug('request: ', req.user);
 
     const { title, content, description, fileUrl } = req.body;
 
@@ -49,13 +48,28 @@ module.exports = app => {
     return res.json(newPost);
   });
 
+  // @route   PUT api/posts/publish
+  // @desc    Publish a post
+  // @access  Private
+  app.put('/api/posts/:id', auth, async (req, res) => {
+    logger.debug('PUT api/posts/publish request: ', req.params);
+
+    // Check the post if it published
+    const existedPost = await Post.findById({ _id: req.params.id });
+    if (existedPost.isPublished) return res.status(400).json({ msg: 'The post has been published!' });
+
+    // Published
+    await Post.findByIdAndUpdate({ _id: req.params.id }, { isPublished: true });
+    return res.json({ msg: 'Published success!' });
+  });
+
   // @route   DELETE api/posts/:id
   // @desc    Delete A Post
   // @access  Private
   app.delete('/api/posts/:id', auth, (req, res) => {
     Post.findById(req.params.id)
-      .then(post => post.remove().then(() => res.json({ success: true })))
-      .catch(err => res.status(404).json({ success: false }));
+      .then(post => post.remove().then(() => res.json({ msg: 'Delete successfully!' })))
+      .catch(err => res.status(404).json({ msg: 'Delete failed!' }));
   });
 };
 
