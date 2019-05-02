@@ -4,8 +4,6 @@ const auth = require('../../middlewares/auth');
 const Topic = require('../../models/Topic');
 
 module.exports = app => {
-
-
   /**
   |--------------------------------------------------
   | GET all topics: /api/topics
