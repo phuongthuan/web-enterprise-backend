@@ -2,14 +2,34 @@ const logger = require('../../logger')
 const auth = require('../../middlewares/auth');
 
 const Post = require('../../models/Post');
+const Comment = require('../../models/Comment');
+
+
+
 
 module.exports = app => {
   // @route   GET api/posts
   // @desc    Get All Posts
   // @access  Public
   app.get('/api/posts', async (req, res) => {
-    logger.debug('GET api/posts')
-    const posts = await Post.find({});
+
+    const { page } = req.query;
+
+    logger.debug('GET api/posts', page);
+
+    const options = {
+      page: page || 1,
+      limit: 10,
+      collation: {
+          locale: 'en'
+      },
+      sort: {
+        posted_date: 'descending'
+      }
+    };
+
+    const posts = await Post.paginate({}, options);
+
     return res.json(posts);
   });
 
@@ -48,11 +68,11 @@ module.exports = app => {
     return res.json(newPost);
   });
 
-  // @route   PUT api/posts/publish
+  // @route   POST api/posts/publish/:id
   // @desc    Publish a post
   // @access  Private
-  app.put('/api/posts/:id', auth, async (req, res) => {
-    logger.debug('PUT api/posts/publish request: ', req.params);
+  app.post('/api/posts/publish/:id', auth, async (req, res) => {
+    logger.debug('PUT api/posts/publish request: ', req.params.id);
 
     // Check the post if it published
     const existedPost = await Post.findById({ _id: req.params.id });
@@ -61,7 +81,7 @@ module.exports = app => {
     // Published
     await Post.findByIdAndUpdate({ _id: req.params.id }, { isPublished: true });
     return res.json({ msg: 'Published success!' });
-  });
+  })
 
   // @route   DELETE api/posts/:id
   // @desc    Delete A Post
@@ -70,6 +90,25 @@ module.exports = app => {
     Post.findById(req.params.id)
       .then(post => post.remove().then(() => res.json({ msg: 'Delete successfully!' })))
       .catch(err => res.status(404).json({ msg: 'Delete failed!' }));
+  });
+
+  // @route   POST api/posts/:id/comment
+  // @desc    Comment on a Post
+  // @access  Private
+  app.post('/api/posts/:id/comment', auth, async (req, res) => {
+    logger.debug('POST api/posts/:id/comment: ', req.params.id);
+
+    const { content } = req.body;
+
+    if (!content) return res.status(400).json({ message: "Please enter comment content!"});
+
+    const newComment = await new Comment({
+      _user: req.user.id,
+      _post: req.params.id,
+      content,
+    }).save();
+
+    return res.json(newComment);
   });
 };
 

@@ -15,6 +15,8 @@ module.exports = app => {
   app.post('/api/users', (req, res) => {
     const { name, email, password, address, phone_number, roles } = req.body;
 
+    logger.debug('POST api/users', req.body);
+
     // Simple validation
     if(!name || !email || !password) {
       return res.status(400).json({ msg: 'Please enter all fields' });
@@ -54,6 +56,7 @@ module.exports = app => {
                         name: user.name,
                         email: user.email,
                         address: user.address || '',
+                        phone_number: user.phone_number || '',
                         roles: user.roles,
                       }
                     });
