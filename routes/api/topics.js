@@ -11,7 +11,7 @@ module.exports = app => {
   */
   app.get('/api/topics', async (req, res) => {
     logger.debug('GET all topics: /api/topics');
-    const topics = await Topic.find({});
+    const topics = await Topic.find();
 
     return res.json(topics);
   });

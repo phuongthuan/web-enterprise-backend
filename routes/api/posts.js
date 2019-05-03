@@ -2,10 +2,9 @@ const logger = require('../../logger')
 const auth = require('../../middlewares/auth');
 
 const Post = require('../../models/Post');
+const User = require('../../models/User');
 const Comment = require('../../models/Comment');
-
-
-
+const { transport, makeANiceEmail } = require('../../services/mail');
 
 module.exports = app => {
   // @route   GET api/posts
@@ -13,7 +12,7 @@ module.exports = app => {
   // @access  Public
   app.get('/api/posts', async (req, res) => {
 
-    const { page } = req.query;
+    const { page, topicId } = req.query;
 
     logger.debug('GET api/posts', page);
 
@@ -28,7 +27,7 @@ module.exports = app => {
       }
     };
 
-    const posts = await Post.paginate({}, options);
+    const posts = await Post.paginate({ _topic: topicId }, options);
 
     return res.json(posts);
   });
@@ -53,17 +52,40 @@ module.exports = app => {
   app.post('/api/posts', auth, async (req, res) => {
     logger.debug('request: ', req.user);
 
-    const { title, content, description, fileUrl } = req.body;
+    const { topicId, title, content, description, fileUrl } = req.body;
 
     if (!content || !title) return res.status(400).json({ message: "Please enter all the required fields!"});
 
+    // Find the student
+    const student = await User.findById({ _id: req.user.id });
+
+    // Create new post.
     const newPost = await new Post({
       _user: req.user.id,
+      _topic: topicId,
       title,
       description,
       content,
       fileUrl
     }).save();
+
+    // Send email to Coordinator
+    await transport.sendMail({
+      from: 'service@greenwich.com',
+      to: 'mc@gmail.com',
+      subject: 'New contribution 🚩',
+      html: makeANiceEmail(`
+      Dear Mr. Marketing Coordinator
+      \n\n
+      <p>A new contribution has been submitted by student ${student.name}.</p>
+      \n\n
+      <p>Please remind that you have to review and approved within 14 days.</p>
+      \n\n
+      <p>If not, this contribution will be deleted after 14 days pending.</p>
+      \n\n
+      <p>Greenwich Team,</p>
+      `),
+    });
 
     return res.json(newPost);
   });
