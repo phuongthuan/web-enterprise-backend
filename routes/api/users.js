@@ -1,17 +1,30 @@
 const bcrypt = require('bcryptjs');
 const config = require('config');
 const jwt = require('jsonwebtoken');
-const logger = require('../../logger');
 
+const logger = require('../../logger');
+const auth = require('../../middlewares/auth');
 const jwtSecret = require('../../config/keys').secretOrKey;
-// User Model
 const User = require('../../models/User');
 
 module.exports = app => {
 
-  // @route   POST api/users
-  // @desc    Register new user
-  // @access  Public
+  // Admin get all users
+  app.get('/api/users', auth, async (req, res) => {
+    // console.log(req.user);
+    const existedUser = await User.findById({ _id: req.user.id });
+
+    // Make sure the user is an admin
+    if (existedUser.roles[0] !== 'admin') {
+      return res.status(403).json({ msg: `You don't have permission to do that!` });
+    }
+
+    const users = await User.find();
+
+    return res.json(users);
+  });
+
+  // Create new user
   app.post('/api/users', (req, res) => {
     const { name, email, password, address, phone_number, roles } = req.body;
 
@@ -68,10 +81,8 @@ module.exports = app => {
       })
   });
 
-  // @route   GET api/users/:id/posts
-  // @desc    Get All Posts of Users
-  // @access  Public
-  app.get('/api/users/:id/posts', async (req, res) => {
+  // Get all posts of the user.
+  app.get('/api/users/:id/posts', auth, async (req, res) => {
     const { id } = req.params;
     logger.debug('GET api/users/:id/posts', req.params)
     try {

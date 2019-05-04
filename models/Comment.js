@@ -8,4 +8,4 @@ const CommentSchema = new Schema({
     posted_date: { type: Date, default: Date.now }
 });
 
-module.exports = Post = mongoose.model('comments', CommentSchema);
+module.exports = Comment = mongoose.model('comments', CommentSchema);

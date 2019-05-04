@@ -79,7 +79,7 @@ module.exports = app => {
       \n\n
       <p>A new contribution has been submitted by student ${student.name}.</p>
       \n\n
-      <p>Please remind that you have to review and approved within 14 days.</p>
+      <p>Please remind that you must review, comment and approved within 14 days.</p>
       \n\n
       <p>If not, this contribution will be deleted after 14 days pending.</p>
       \n\n
