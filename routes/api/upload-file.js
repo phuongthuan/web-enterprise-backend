@@ -35,8 +35,9 @@ const singleUpload = upload.single('file');
 
 module.exports = app => {
   app.post('/api/upload-file', (req, res) => {
-    logger.debug('request: ', req.file)
+
     singleUpload(req, res, (err) => {
+
       if (err) {
         return res.status(422).send({errors: [{title: 'Image Upload Error', detail: err.message}] });
       } 

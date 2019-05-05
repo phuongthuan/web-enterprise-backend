@@ -2,57 +2,100 @@ const logger = require('../../logger')
 const auth = require('../../middlewares/auth');
 
 const Post = require('../../models/Post');
+const Topic = require('../../models/Topic');
 const User = require('../../models/User');
 const Comment = require('../../models/Comment');
 const { transport, makeANiceEmail } = require('../../services/mail');
+const ObjectID = require("mongodb").ObjectID
 
 module.exports = app => {
-  // @route   GET api/posts
-  // @desc    Get All Posts
-  // @access  Public
-  app.get('/api/posts', async (req, res) => {
+
+  // Get all posts
+  app.get('/api/posts', auth, async (req, res) => {
 
     const { page, topicId } = req.query;
 
-    logger.debug('GET api/posts', page);
+    const existedUser = await User.findById({ _id: req.user.id });
 
-    const options = {
-      page: page || 1,
-      limit: 10,
-      collation: {
-          locale: 'en'
-      },
-      sort: {
-        posted_date: 'descending'
-      }
-    };
+    if (existedUser.roles[0] === 'student') {
+      // const posts = await Post.paginate({ _user: req.user.id }, options);
+      const posts = await Post.find({ _user: req.user.id });
 
-    const posts = await Post.paginate({ _topic: topicId }, options);
+      const topics = await Topic.find();
 
-    return res.json(posts);
+      const users = await User.find();
+
+      const postsWithTopic = posts
+        .map(post => {
+          const author = users.find(user => user._id.toString() === post._user.toString());
+          const topicName = topics.find(topic => topic._id.toString() === post._topic.toString());
+          
+          return { 
+            ...post._doc, 
+            _user: { name: author.name, roles: author.roles },
+            _topic: { name: topicName.name } 
+          }
+        });
+
+      return res.json(postsWithTopic);
+
+    } else if (existedUser.roles[0] === 'coordinator') {
+      const posts = await Post.find({ _topic: topicId });
+
+      const users = await User.find();
+
+      const postsWithUser = posts
+        .map(post => {
+          const author = users.find(user => user._id.toString() === post._user.toString());
+          return { ...post._doc, _user: { name: author.name, roles: author.roles } }
+        });
+
+      return res.json(postsWithUser);
+
+    } else {
+
+      const posts = await Post.find();
+
+      const topics = await Topic.find();
+
+      const users = await User.find();
+
+      const postsWithTopic = posts
+        .map(post => {
+
+          const author = users.find(user => user._id.toString() === post._user.toString());
+          const topicName = topics.find(topic => ObjectID(topic._id).toString() === ObjectID(post._topic).toString());
+
+          return {
+            ...post._doc, 
+            _user: { name: author.name, roles: author.roles },
+            _topic: { topicName }
+          }
+        });
+
+      return res.json(postsWithTopic);
+    }
+
   });
 
-  // @route   GET api/posts/:id
-  // @desc    Get A Post
-  // @access  Public
+  // Get a post
   app.get('/api/posts/:id', async (req, res) => {
     const { id } = req.params;
     logger.debug('GET api/posts/:id ', req.params)
     try {
       const post = await Post.findById(id);
       return res.json(post);
+    
     } catch (error) {
       return res.status(400).json({ msg: 'Post Does not exist' });
     }
   });
 
-  // @route   POST api/posts
-  // @desc    Create A Post
-  // @access  Private
+  // Create a new post
   app.post('/api/posts', auth, async (req, res) => {
     logger.debug('request: ', req.user);
 
-    const { topicId, title, content, description, fileUrl } = req.body;
+    const { topicId, title, content, fileUrl } = req.body;
 
     if (!content || !title) return res.status(400).json({ message: "Please enter all the required fields!"});
 
@@ -64,7 +107,6 @@ module.exports = app => {
       _user: req.user.id,
       _topic: topicId,
       title,
-      description,
       content,
       fileUrl
     }).save();
@@ -90,10 +132,8 @@ module.exports = app => {
     return res.json(newPost);
   });
 
-  // @route   POST api/posts/publish/:id
-  // @desc    Publish a post
-  // @access  Private
-  app.post('/api/posts/publish/:id', auth, async (req, res) => {
+  // Publish a post
+  app.get('/api/posts/publish/:id', auth, async (req, res) => {
     logger.debug('PUT api/posts/publish request: ', req.params.id);
 
     // Check the post if it published
@@ -105,24 +145,20 @@ module.exports = app => {
     return res.json({ msg: 'Published success!' });
   })
 
-  // @route   DELETE api/posts/:id
-  // @desc    Delete A Post
-  // @access  Private
+  // Delete a post
   app.delete('/api/posts/:id', auth, (req, res) => {
     Post.findById(req.params.id)
       .then(post => post.remove().then(() => res.json({ msg: 'Delete successfully!' })))
       .catch(err => res.status(404).json({ msg: 'Delete failed!' }));
   });
 
-  // @route   POST api/posts/:id/comment
-  // @desc    Comment on a Post
-  // @access  Private
-  app.post('/api/posts/:id/comment', auth, async (req, res) => {
-    logger.debug('POST api/posts/:id/comment: ', req.params.id);
+  // Comment on a post
+  app.post('/api/posts/:id/comments', auth, async (req, res) => {
+    logger.debug('POST api/posts/:id/comments: ', req.params.id);
 
     const { content } = req.body;
 
-    if (!content) return res.status(400).json({ message: "Please enter comment content!"});
+    if (!content) return res.status(400).json({ message: 'Please enter comment content!' });
 
     const newComment = await new Comment({
       _user: req.user.id,
@@ -130,7 +166,45 @@ module.exports = app => {
       content,
     }).save();
 
-    return res.json(newComment);
+    const userComment = await User.findById({ _id: req.user.id });
+
+    const commentWithUser = { ...newComment._doc, _user: { email: userComment.email, roles: userComment.roles }}
+
+    return res.json(commentWithUser);
   });
+
+  // Get all comments of a post (with user name)
+  app.get('/api/posts/:id/comments', auth, async (req, res) => {
+    const comments = await Comment.find({ _post: req.params.id });
+
+    const users = await User.find();
+
+    const commentsWithUsername = comments.map(comment => {
+      const userComment = users.find(user => user._id.toString() === comment._user.toString());
+      return { ...comment._doc, _user: { email: userComment.email, roles: userComment.roles } }
+    });
+
+    return res.json(commentsWithUsername);
+  });
+
+  // Count number of post in 
+  app.get('/api/count/faculties/:id/posts', auth, async (req, res) => {
+
+    const topics = await Topic.find({ _faculty: req.params.id });
+
+    let sum = 0;
+
+    const numberOfPosts = topics.map(async topic => {
+      const postCount = await Post.countDocuments({ _topic: topic._id });
+      sum = sum + postCount;
+      return topic;
+    });
+
+    console.log(sum);
+
+    return res.json(numberOfPosts);
+
+  });
+
 };
 

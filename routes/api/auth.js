@@ -53,9 +53,7 @@ module.exports = app => {
       })
   });
 
-  // @route   GET api/auth/user
-  // @desc    Get user data
-  // @access  Private
+  // Load user
   app.get('/api/auth/user', auth, (req, res) => {
     logger.debug('GET api/auth/user', req.user)
     User.findById(req.user.id)

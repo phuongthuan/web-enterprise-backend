@@ -8,7 +8,6 @@ const PostSchema = new Schema({
     _topic: { type: Schema.Types.ObjectId, ref: 'Topic' },
     title: { type: String, required: true },
     content: { type: String, required: true },
-    description: String,
     fileUrl: { type: String },
     isPublished: {
         type: Boolean,

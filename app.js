@@ -9,7 +9,7 @@ const db = require('./config/keys').mongoURI;
 const app = express();
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ strict: false }));
 
 // Connect to Mongo
 mongoose
@@ -28,6 +28,7 @@ require('./routes/api/faculties')(app);
 require('./routes/api/topics')(app);
 require('./routes/api/users')(app);
 require('./routes/api/upload-file')(app);
+require('./routes/api/download')(app);
 
 
 // Start server
