@@ -18,18 +18,18 @@ module.exports = app => {
 
     // Simple validation
     if(!email || !password) {
-      return res.status(400).json({ msg: 'Please enter all fields' });
+      return res.status(400).json({ msg: 'Please enter all fields.' });
     }
 
     // Check for existing user
     User.findOne({ email })
       .then(user => {
-        if(!user) return res.status(400).json({ msg: 'User Does not exist' });
+        if(!user) return res.status(400).json({ msg: 'Email does not exist.' });
 
         // Validate password
         bcrypt.compare(password, user.password)
           .then(isMatch => {
-            if(!isMatch) return res.status(400).json({ msg: 'Invalid credentials' });
+            if(!isMatch) return res.status(400).json({ msg: 'Password incorrect.' });
 
             jwt.sign(
               { id: user.id },

@@ -86,7 +86,7 @@ module.exports = app => {
       return res.json(post);
     
     } catch (error) {
-      return res.status(400).json({ msg: 'Post Does not exist' });
+      return res.status(400).json({ msg: 'Post does not exist.' });
     }
   });
 
@@ -96,7 +96,7 @@ module.exports = app => {
 
     const { topicId, title, content, fileUrl } = req.body;
 
-    if (!content || !title) return res.status(400).json({ message: "Please enter all the required fields!"});
+    if (!content || !title) return res.status(400).json({ message: "Please enter all the required fields."});
 
     // Find the student
     const student = await User.findById({ _id: req.user.id });
@@ -131,17 +131,31 @@ module.exports = app => {
     return res.json(newPost);
   });
 
+  app.put('/api/posts/:id', auth, async (req, res) => {
+    const postId = req.params.id;
+
+    await Post.findByIdAndUpdate({ _id: postId }, {
+      ...req.body,
+      _topic: req.body.topicId
+    });
+
+    const updatedPost = await Post.findById(postId);
+
+    return res.json(updatedPost);
+
+  });
+
   // Publish a post
   app.get('/api/posts/publish/:id', auth, async (req, res) => {
     logger.debug('PUT api/posts/publish request: ', req.params.id);
 
     // Check the post if it published
     const existedPost = await Post.findById({ _id: req.params.id });
-    if (existedPost.isPublished) return res.status(400).json({ msg: 'The post has been published!' });
+    if (existedPost.isPublished) return res.status(400).json({ msg: 'The post has been published.' });
 
     // Published
     await Post.findByIdAndUpdate({ _id: req.params.id }, { isPublished: true });
-    return res.json({ msg: 'Published success!' });
+    return res.json({ msg: 'Published.' });
   })
 
   // Delete a post
@@ -157,7 +171,7 @@ module.exports = app => {
 
     const { content } = req.body;
 
-    if (!content) return res.status(400).json({ message: 'Please enter comment content!' });
+    if (!content) return res.status(400).json({ message: 'Please enter comment content.' });
 
     const newComment = await new Comment({
       _user: req.user.id,
