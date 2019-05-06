@@ -18,7 +18,6 @@ module.exports = app => {
     const existedUser = await User.findById({ _id: req.user.id });
 
     if (existedUser.roles[0] === 'student') {
-      // const posts = await Post.paginate({ _user: req.user.id }, options);
       const posts = await Post.find({ _user: req.user.id });
 
       const topics = await Topic.find();
