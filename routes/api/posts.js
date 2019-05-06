@@ -18,6 +18,7 @@ module.exports = app => {
     const existedUser = await User.findById({ _id: req.user.id });
 
     if (existedUser.roles[0] === 'student') {
+      
       const posts = await Post.find({ _user: req.user.id });
 
       const topics = await Topic.find();
@@ -48,7 +49,6 @@ module.exports = app => {
           const author = users.find(user => user._id.toString() === post._user.toString());
           return { ...post._doc, _user: { name: author.name, roles: author.roles } }
         });
-
       return res.json(postsWithUser);
 
     } else {

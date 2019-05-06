@@ -28,7 +28,6 @@ require('./routes/api/faculties')(app);
 require('./routes/api/topics')(app);
 require('./routes/api/users')(app);
 require('./routes/api/upload-file')(app);
-require('./routes/api/download')(app);
 
 
 // Start server
