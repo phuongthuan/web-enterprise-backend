@@ -3,6 +3,7 @@ const auth = require('../../middlewares/auth');
 
 const Post = require('../../models/Post');
 const Topic = require('../../models/Topic');
+const Faculty = require('../../models/Faculty');
 const User = require('../../models/User');
 const Comment = require('../../models/Comment');
 const { transport, makeANiceEmail } = require('../../services/mail');
@@ -98,6 +99,12 @@ module.exports = app => {
 
     if (!content || !title) return res.status(400).json({ message: "Please enter all the required fields."});
 
+    // Find topic:
+    const topic = await Topic.findById(topicId);
+
+    // Find faculty based on topicId:
+    const faculty = await Faculty.findById(topic._faculty);
+
     // Find the student
     const student = await User.findById({ _id: req.user.id });
 
@@ -105,6 +112,7 @@ module.exports = app => {
     const newPost = await new Post({
       _user: req.user.id,
       _topic: topicId,
+      _faculty: faculty._id,
       title,
       content,
       fileUrl
@@ -161,7 +169,7 @@ module.exports = app => {
   // Delete a post
   app.delete('/api/posts/:id', auth, (req, res) => {
     Post.findById(req.params.id)
-      .then(post => post.remove().then(() => res.json({ msg: 'Delete successfully!' })))
+      .then(post => post.remove().then(() => res.json(post)))
       .catch(err => res.status(404).json({ msg: 'Delete failed!' }));
   });
 

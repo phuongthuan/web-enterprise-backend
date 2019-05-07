@@ -93,4 +93,11 @@ module.exports = app => {
     }
   });
 
+  // Delete a post
+  app.delete('/api/users/:id', auth, (req, res) => {
+      User.findById(req.params.id)
+        .then(user => user.remove().then(() => res.json(user)))
+        .catch(err => res.status(404).json({ msg: 'Delete failed!' }));
+  });
+
 };

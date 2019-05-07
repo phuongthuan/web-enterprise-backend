@@ -10,7 +10,24 @@ module.exports = app => {
   app.get('/api/faculties', auth, async (req, res) => {
     logger.debug('GET all faculties: /api/faculties');
     const faculties = await Faculty.find();
-    return res.json(faculties);
+    
+    let sumPost = 0;
+
+    const facultiesWithContributions = faculties.map(async faculty => {
+      const posts = await Post.find({ _faculty: faculty._id });
+
+      sumPost += posts.length;
+
+      return {
+        ...faculty._doc,
+        count: posts.length,
+      }
+    });
+
+    const results = await Promise.all(facultiesWithContributions);
+
+
+    return res.json({ faculties: results, totalPost: sumPost });
 
   });
 
